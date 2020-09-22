@@ -1,13 +1,19 @@
 #!/bin/bash
 
 # Jenkins
-wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
-sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
-sudo add-apt-repository ppa:webupd8team/java -y
-sudo apt-get update
-echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | sudo debconf-set-selections
-sudo apt-get install oracle-java8-installer -y
-sudo apt-get install jenkins -y
+# wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
+# sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+# sudo add-apt-repository ppa:webupd8team/java -y
+# sudo apt-get update
+# echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | sudo debconf-set-selections
+# sudo apt-get install oracle-java8-installer -y
+# sudo apt-get install jenkins -y
+
+sudo apt install openjdk-8-jdk -y
+sudo wget -qO - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+sudo apt-get update && sudo apt-get install jenkins -y
+sudo service jenkins restart
 
 # Docker
 sudo apt-get install apt-transport-https ca-certificates curl software-properties-common -y
@@ -18,10 +24,20 @@ sudo apt-get update
 sudo apt-get install docker-ce -y
 
 # Azure CLI
-echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ wheezy main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
-sudo apt-key adv --keyserver packages.microsoft.com --recv-keys 417A0893
-sudo apt-get install apt-transport-https
-sudo apt-get update && sudo apt-get install azure-cli
+# echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ wheezy main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+# sudo apt-key adv --keyserver packages.microsoft.com --recv-keys 417A0893
+# sudo apt-get install apt-transport-https
+# sudo apt-get update && sudo apt-get install azure-cli
+sudo apt-get update
+sudo apt-get install ca-certificates curl apt-transport-https lsb-release gnupg
+curl -sL https://packages.microsoft.com/keys/microsoft.asc |
+    gpg --dearmor |
+    sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+AZ_REPO=$(lsb_release -cs)
+echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" |
+    sudo tee /etc/apt/sources.list.d/azure-cli.list
+sudo apt-get update
+sudo apt-get install azure-cli
 
 # Kubectl
 cd /tmp/
@@ -30,7 +46,7 @@ chmod +x ./kubectl
 sudo mv ./kubectl /usr/local/bin/kubectl
 
 # Configure access
-usermod -aG docker jenkins
-usermod -aG docker azureuser
+sudo usermod -aG docker jenkins
+sudo usermod -aG docker azureuser
 sudo touch /var/lib/jenkins/jenkins.install.InstallUtil.lastExecVersion
 service jenkins restart
